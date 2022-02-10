@@ -12,7 +12,7 @@ using namespace std;
 
 #define TARGET_FPS 60 
 #define MS_PER_FRAME 1000/ TARGET_FPS
-#define MS_PER_UPDATE 1000/15
+#define MS_PER_UPDATE 1000/12
 #define SCREEN_WIDTH 640 
 #define SCREEN_HEIGHT 480 
 #define WALL_THICKNESS 20
@@ -25,6 +25,7 @@ using namespace std;
 #define INTERVAL_Y SNAKEPIECEHEIGHT
 #define GRID_COL_NUM (SCREEN_WIDTH - WALL_THICKNESS*2)/SNAKEPIECE_WIDTH
 #define GRID_ROW_NUM (SCREEN_HEIGHT - WALL_THICKNESS*2)/SNAKEPIECE_HEIGHT
+#define WALL 1
 
 typedef enum{
     UP,
@@ -262,6 +263,7 @@ void draw_snake(){
         block.y = it->row * SNAKEPIECE_HEIGHT + SNAKEPIECE_HEIGHT;
 
         //Wiggling deviation
+        canWiggle = false;
         if(!is_turning_point && canWiggle){
             if(it->dir == HORIZONTAL){
                 //Deviate up and down
@@ -365,28 +367,28 @@ void move_snake(){
     switch(curr_dir){
         case LEFT:
             next.row = head.row;
-            if(head.col - 1 < 0)
+            if(head.col - 1 < 0 && !WALL)
                 next.col = GRID_COL_NUM - 1;
             else
                 next.col = head.col - 1;
             break;
         case RIGHT:
             next.row = head.row;
-            if(head.col + 1 >= GRID_COL_NUM)
+            if(head.col + 1 >= GRID_COL_NUM && !WALL)
                 next.col = 0;
             else
                 next.col = head.col + 1;
             break;
         case UP:
             next.col = head.col;
-            if(head.row - 1 < 0 )
+            if(head.row - 1 < 0  && !WALL)
                 next.row = GRID_ROW_NUM - 1;
             else
                 next.row = head.row - 1;
             break;
         case DOWN:
             next.col = head.col;
-            if(head.row + 1 >= GRID_ROW_NUM)
+            if(head.row + 1 >= GRID_ROW_NUM && !WALL)
                 next.row = 0;
             else
                 next.row = head.row + 1;
@@ -436,8 +438,10 @@ void move_snake(){
     return;
 }
 
-//return 2 for apple, return 1 for body
+//return 3 for wall, return 2 for apple, return 1 for body
 int check_next_block(SnakePiece next){
+    if((next.row < 0 || next.row >= GRID_ROW_NUM || next.col < 0 || next.col >= GRID_COL_NUM) && WALL)
+        return 3;
     if(next.row == apple.row && next.col == apple.col){
         return 2;
     } 
@@ -481,21 +485,25 @@ void change_direction(SDL_Event e){
             if(curr_dir == DOWN)
                 break;
             curr_dir = UP;
+            cout << "UP" << endl;
             break;
         case SDLK_DOWN:
             if(curr_dir == UP)
                 break;
             curr_dir = DOWN;
+            cout << "DOWN" << endl;
             break;
         case SDLK_RIGHT:
             if(curr_dir == LEFT)
                 break;
             curr_dir = RIGHT;
+            cout << "RIGHT" << endl;
             break;
         case SDLK_LEFT:
             if(curr_dir == RIGHT)
                 break;
             curr_dir = LEFT;
+            cout << "LEFT" << endl;
             break;
     }
     can_move = false;
